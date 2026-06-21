@@ -53,6 +53,8 @@
   .sl{background:var(--hi);color:var(--grn)}.ss{background:var(--hr);color:var(--red)}
   .coin{font-weight:700}
   footer{margin-top:14px;font-size:10px;color:var(--mut);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  #chart,#donut{cursor:crosshair}
+  #tip{position:fixed;pointer-events:none;background:#1b1c19;color:#faf8f3;font-size:11px;line-height:1.5;padding:6px 9px;border-radius:7px;opacity:0;transition:opacity .08s;z-index:99;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 </style>
 </head>
 <body>
@@ -216,7 +218,7 @@ async function loadState(){
 }
 async function loadMids(){try{mids=await post({type:"allMids"});}catch(e){}}
 
-const dc=$('#donut');let dx=null;
+const dc=$('#donut');let dx=null,CG=null,DS=null;
 function fitFixed(c,w,h){c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);c.W=w;c.H=h;return x;}
 function drawDonut(rows,gross){
   if(!dx)dx=fitFixed(dc,270,270);
@@ -225,9 +227,10 @@ function drawDonut(rows,gross){
   const longs=rows.filter(p=>p.szi>0).sort((a,b)=>b.nv-a.nv);
   const shorts=rows.filter(p=>p.szi<0).sort((a,b)=>b.nv-a.nv);
   const ord=[...longs,...shorts];
-  let ang=-Math.PI/2;
+  let ang=-Math.PI/2;const dseg=[];
   ord.forEach(p=>{
     const isL=p.szi>0;const frac=p.nv/gross;const a2=ang+frac*Math.PI*2;
+    dseg.push({coin:p.coin,a0:ang,a1:a2,nv:p.nv,pct:frac*100,side:isL?1:-1});
     const grp=isL?longs:shorts;const idx=grp.indexOf(p),cnt=grp.length;
     const L=isL?(30+idx/Math.max(1,cnt-1)*30):(38+idx/Math.max(1,cnt-1)*28);
     dx.beginPath();dx.moveTo(ccx,ccy);dx.arc(ccx,ccy,R,ang,a2);dx.closePath();
@@ -246,6 +249,7 @@ function drawDonut(rows,gross){
   $('#dlegend').innerHTML=ord.map(p=>{const isL=p.szi>0;const col=isL?'#3a9d6e':'#c0473f';
     return `<div style="display:flex;align-items:center;gap:7px;font-size:10.5px"><span style="width:9px;height:9px;border-radius:2px;background:${col};flex:none"></span><b style="color:${isL?'var(--grn)':'var(--red)'}">${p.coin}</b><span class="mut" style="margin-left:auto">${(p.nv/gross*100).toFixed(1)}%</span></div>`;
   }).join('');
+  DS={ccx,ccy,R,r,seg:dseg,gross};
 }
 
 // chart
@@ -256,14 +260,18 @@ function drawChart(){
   const hist=(metric==='pnl'?blk.pnlHistory:blk.accountValueHistory)||[];
   const vals=hist.map(h=>parseFloat(h[1]));if(vals.length<2)return;
   const m=Math.min(...vals,0),M=Math.max(...vals,0);const Y=v=>ch.H-10-((v-m)/(M-m||1))*(ch.H-24);
+  CG={vals,ts:hist.map(h=>+h[0]),m,M,W:ch.W,H:ch.H};
   // zero line
   cx.strokeStyle='rgba(140,138,128,.4)';cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(0,Y(0));cx.lineTo(ch.W,Y(0));cx.stroke();cx.setLineDash([]);
-  const last=vals[vals.length-1],pos=last>=0;
-  cx.beginPath();vals.forEach((v,i)=>{const x=i/(vals.length-1)*ch.W;i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});
-  cx.lineTo(ch.W,Y(0));cx.lineTo(0,Y(0));cx.closePath();
-  const g=cx.createLinearGradient(0,0,0,ch.H);g.addColorStop(0,pos?'rgba(58,157,110,.26)':'rgba(192,71,63,.22)');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fill();
-  cx.beginPath();vals.forEach((v,i)=>{const x=i/(vals.length-1)*ch.W;i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});
-  cx.strokeStyle=pos?'#2f7d4f':'#c0473f';cx.lineWidth=1.7;cx.stroke();
+  const last=vals[vals.length-1],pos=last>=0,zeroY=Y(0);
+  const linePath=()=>{cx.beginPath();vals.forEach((v,i)=>{const x=i/(vals.length-1)*ch.W;i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});};
+  const fillPath=()=>{linePath();cx.lineTo(ch.W,zeroY);cx.lineTo(0,zeroY);cx.closePath();};
+  cx.save();cx.beginPath();cx.rect(0,0,ch.W,Math.max(0,zeroY));cx.clip();
+    fillPath();cx.fillStyle='rgba(58,157,110,.20)';cx.fill();
+    linePath();cx.strokeStyle='#2f7d4f';cx.lineWidth=1.8;cx.stroke();cx.restore();
+  cx.save();cx.beginPath();cx.rect(0,zeroY,ch.W,Math.max(0,ch.H-zeroY));cx.clip();
+    fillPath();cx.fillStyle='rgba(192,71,63,.18)';cx.fill();
+    linePath();cx.strokeStyle='#c0473f';cx.lineWidth=1.8;cx.stroke();cx.restore();
   $('#chVal').innerHTML='<span class="'+(pos?'grn':'red')+'">'+sig(last)+'</span>';
   $('#chTitle').textContent=(metric==='pnl'?'P&L · ':'Account value · ')+({day:'24h',week:'7d',month:'30d',allTime:'all-time'}[win]);
   // roi + 24h from allTime/day
@@ -277,6 +285,32 @@ function drawChart(){
 }
 document.querySelectorAll('#metric button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#metric button').forEach(x=>x.classList.remove('on'));b.classList.add('on');metric=b.dataset.m;drawChart();});
 document.querySelectorAll('#win button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#win button').forEach(x=>x.classList.remove('on'));b.classList.add('on');win=b.dataset.w;drawChart();});
+
+// ===== hover tooltips =====
+document.body.insertAdjacentHTML('beforeend','<div id="tip"></div>');
+const tip=$('#tip');
+const showTip=(h,x,y)=>{tip.innerHTML=h;tip.style.opacity=1;tip.style.left=Math.min(x+14,innerWidth-160)+'px';tip.style.top=(y+14)+'px';};
+const hideTip=()=>{tip.style.opacity=0;};
+ch.addEventListener('mousemove',e=>{
+  if(!CG||!CG.vals)return;const rect=ch.getBoundingClientRect();const mx=e.clientX-rect.left;
+  const n=CG.vals.length,i=Math.max(0,Math.min(n-1,Math.round(mx/CG.W*(n-1))));
+  drawChart();
+  const x=i/(n-1)*CG.W,Y=v=>CG.H-10-((v-CG.m)/(CG.M-CG.m||1))*(CG.H-24),y=Y(CG.vals[i]);
+  cx.save();cx.strokeStyle='rgba(27,28,25,.3)';cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(x,6);cx.lineTo(x,CG.H-6);cx.stroke();cx.setLineDash([]);
+  cx.beginPath();cx.arc(x,y,4,0,7);cx.fillStyle=CG.vals[i]>=0?'#2f7d4f':'#c0473f';cx.fill();cx.strokeStyle='#faf8f3';cx.lineWidth=1.5;cx.stroke();cx.restore();
+  const dt=new Date(CG.ts[i]).toISOString().slice(0,10);
+  showTip(`<b class="${CG.vals[i]>=0?'grn':'red'}">${sig(CG.vals[i])}</b><br><span style="color:#b9b6ac">${dt}</span>`,e.clientX,e.clientY);
+});
+ch.addEventListener('mouseleave',()=>{hideTip();drawChart();});
+dc.addEventListener('mousemove',e=>{
+  if(!DS||!DS.seg)return;const rect=dc.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(DS.ccx*2/rect.width)-DS.ccx,my=(e.clientY-rect.top)*(DS.ccy*2/rect.height)-DS.ccy;
+  const dist=Math.hypot(mx,my);if(dist<DS.r||dist>DS.R){hideTip();return;}
+  let aa=Math.atan2(my,mx);if(aa<-Math.PI/2)aa+=Math.PI*2;
+  const s=DS.seg.find(g=>aa>=g.a0&&aa<=g.a1);if(!s){hideTip();return;}
+  showTip(`<b style="color:${s.side>0?'#8fe0b8':'#f0a39d'}">${s.coin}</b> ${s.side>0?'LONG':'SHORT'}<br>${usd(s.nv)} · ${s.pct.toFixed(1)}%`,e.clientX,e.clientY);
+});
+dc.addEventListener('mouseleave',hideTip);
 
 (async()=>{await loadMids();await loadVault();await loadState();})();
 setInterval(loadState,7000);setInterval(loadMids,4000);setInterval(loadVault,30000);
