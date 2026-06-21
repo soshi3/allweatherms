@@ -1,192 +1,286 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>All-Weather Multi-Strategy — Market-Neutral Crypto Vault</title>
-<meta name="description" content="All-Weather Multi-Strategy: a market-neutral, multi-engine, fully-automated crypto trading vault on Hyperliquid. Built to weather every regime." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>All-Weather Multi-Strategy — Live Vault Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
-  :root{
-    --bg:#0a0f12; --bg2:#0f161a; --card:#121b20; --line:#1e2a31;
-    --txt:#e8eef0; --mut:#8aa0a8; --acc:#3fe0b0; --acc2:#28c2d6;
-    --warn:#f0b54f;
-  }
+  :root{--bg:#eceae2;--panel:#faf8f3;--ink:#1b1c19;--mut:#8b8a80;--line:#dcd8cc;--grn:#2f7d4f;--grnb:#3a9d6e;--red:#c0473f;--hi:#e8f0e6;--hr:#f6e7e5;}
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-  .acc{color:var(--acc)}
-  .btn{display:inline-block;padding:14px 26px;border-radius:10px;font-weight:600;font-size:15px;transition:.2s;cursor:pointer;border:1px solid transparent}
-  .btn-p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#04110d}
-  .btn-p:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(63,224,176,.25)}
-  .btn-o{border-color:var(--line);color:var(--txt)}
-  .btn-o:hover{border-color:var(--acc);color:var(--acc)}
-
-  /* nav */
-  nav{position:sticky;top:0;z-index:50;background:rgba(10,15,18,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
-  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.3px}
-  .logo .dot{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--acc),var(--acc2))}
-  .nav-links{display:flex;gap:28px;font-size:14px;color:var(--mut)}
-  .nav-links a:hover{color:var(--txt)}
-  @media(max-width:760px){.nav-links{display:none}}
-
-  /* hero */
-  .hero{padding:90px 0 70px;text-align:center;position:relative;overflow:hidden}
-  .hero::before{content:"";position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(63,224,176,.13),transparent 70%);pointer-events:none}
-  .badge{display:inline-block;padding:6px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--acc);margin-bottom:26px;background:rgba(63,224,176,.06)}
-  .hero h1{font-size:clamp(34px,6vw,60px);font-weight:800;line-height:1.08;letter-spacing:-1px}
-  .hero p.sub{font-size:clamp(16px,2.4vw,20px);color:var(--mut);max-width:660px;margin:24px auto 0}
-  .hero .cta{display:flex;gap:14px;justify-content:center;margin-top:38px;flex-wrap:wrap}
-
-  section{padding:70px 0}
-  .eyebrow{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:1.5px;text-transform:uppercase}
-  h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.5px;margin:10px 0 8px}
-  .lead{color:var(--mut);max-width:640px}
-
-  .grid{display:grid;gap:18px;margin-top:40px}
-  .g3{grid-template-columns:repeat(3,1fr)}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px}
-  .card h3{font-size:18px;font-weight:700;margin-bottom:8px}
-  .card p{color:var(--mut);font-size:15px}
-  .card .ic{width:42px;height:42px;border-radius:11px;background:rgba(63,224,176,.1);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
-
-  .engine{display:flex;gap:20px;align-items:flex-start;padding:26px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
-  .engine .num{font-size:28px;font-weight:800;color:var(--acc);min-width:46px}
-  .engine h3{font-size:19px;margin-bottom:6px}
-  .engine p{color:var(--mut);font-size:15px}
-  .engine .tag{display:inline-block;margin-top:10px;font-size:12px;color:var(--acc);border:1px solid var(--line);border-radius:6px;padding:3px 9px}
-
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:40px}
-  @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
-  .stat{text-align:center;padding:24px;background:var(--bg2);border:1px solid var(--line);border-radius:14px}
-  .stat .v{font-size:26px;font-weight:800;color:var(--txt)}
-  .stat .l{font-size:13px;color:var(--mut);margin-top:6px}
-
-  .cta-band{background:linear-gradient(135deg,rgba(63,224,176,.08),rgba(40,194,214,.05));border:1px solid var(--line);border-radius:22px;padding:54px 40px;text-align:center}
-  .cta-band h2{margin-bottom:14px}
-  .cta-band p{color:var(--mut);max-width:560px;margin:0 auto 30px}
-
-  .disc{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:26px;font-size:12.5px;color:var(--mut);line-height:1.7}
-  .disc b{color:var(--warn)}
-
-  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--mut);font-size:13px}
-  .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
-  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
-  .pill .g{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+  body{font-family:'Space Mono',ui-monospace,Menlo,monospace;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.45;padding:18px}
+  .wrap{width:100%;margin:0 auto}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .mut{color:var(--mut)}.grn{color:var(--grn)}.red{color:var(--red)}
+  .lbl{font-size:9.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
+  .tag{display:inline-block;font-size:9px;letter-spacing:1px;padding:3px 8px;border:1px solid var(--line);border-radius:5px;color:var(--mut)}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--hi);color:var(--grn)}
+  .pill .d{width:7px;height:7px;border-radius:50%;background:var(--grnb);box-shadow:0 0 7px var(--grnb);animation:bl 1.4s infinite}
+  @keyframes bl{50%{opacity:.3}}
+  canvas{display:block;width:100%}
+  /* header */
+  .hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+  .hdr .l{display:flex;align-items:center;gap:14px}
+  .ico{width:40px;height:40px;border:1px solid var(--line);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--panel)}
+  .name{font-weight:700;font-size:20px}
+  .desc{font-size:10.5px;color:var(--mut);max-width:560px}
+  /* stat cards */
+  .cards{display:grid;grid-template-columns:repeat(8,1fr);gap:12px;margin-bottom:16px}
+  @media(max-width:1200px){.cards{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:640px){.cards{grid-template-columns:repeat(2,1fr)}}
+  .c{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .c .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:3px}
+  .c .s{font-size:9px;color:var(--mut);margin-top:2px}
+  /* layout */
+  .main{display:grid;grid-template-columns:2.2fr 1fr;gap:14px;margin-bottom:14px}
+  @media(max-width:980px){.main{grid-template-columns:1fr}}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .seg button{background:transparent;border:none;font-family:inherit;font-size:10px;padding:5px 11px;color:var(--mut);cursor:pointer}
+  .seg button.on{background:var(--ink);color:var(--panel)}
+  .bar{height:14px;border-radius:7px;background:var(--hr);overflow:hidden;display:flex;margin-top:8px}
+  .bar i{display:block;height:100%}
+  .kv{display:flex;justify-content:space-between;font-size:11.5px;padding:6px 0;border-bottom:1px dotted var(--line)}
+  .gauge{height:8px;border-radius:5px;background:#e7e3d8;overflow:hidden;margin-top:5px}
+  .gauge i{display:block;height:100%;background:linear-gradient(90deg,var(--grnb),var(--grn))}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th{text-align:right;font-size:9px;letter-spacing:.5px;color:var(--mut);text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:400}
+  th:first-child,td:first-child{text-align:left}
+  td{text-align:right;padding:8px 10px;border-bottom:1px solid #efece4;font-variant-numeric:tabular-nums}
+  tr:hover td{background:#f3f1ea}
+  .side{font-size:9px;padding:2px 7px;border-radius:4px}
+  .sl{background:var(--hi);color:var(--grn)}.ss{background:var(--hr);color:var(--red)}
+  .coin{font-weight:700}
+  footer{margin-top:14px;font-size:10px;color:var(--mut);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<nav><div class="wrap nav">
-  <div class="logo"><span class="dot"></span> All-Weather <span style="color:var(--mut);font-weight:600">MS</span></div>
-  <div class="nav-links">
-    <a href="#strategy">Strategy</a>
-    <a href="#engines">Engines</a>
-    <a href="#risk">Risk</a>
-    <a href="#transparency">Transparency</a>
-  </div>
-  <a class="btn btn-p" href="#invest" style="padding:9px 18px;font-size:14px">Invest</a>
-</div></nav>
-
-<header class="hero"><div class="wrap">
-  <span class="badge">Market-neutral · Multi-strategy · Fully automated</span>
-  <h1>Designed to weather<br/>every market regime.</h1>
-  <p class="sub">All-Weather MS is a <span class="acc">dollar-neutral, multi-engine</span> crypto trading vault on Hyperliquid. Uncorrelated return streams, disciplined risk management, and 24/7 rules-based automation — built to compound steadily, not to gamble.</p>
-  <div class="cta">
-    <a class="btn btn-p" href="#invest">View the Vault</a>
-    <a class="btn btn-o" href="#strategy">How it works</a>
-  </div>
-</div></header>
-
-<section id="strategy"><div class="wrap">
-  <span class="eyebrow">The approach</span>
-  <h2>Many engines. One smooth ride.</h2>
-  <p class="lead">Most strategies live or die on a single bet. We combine several <b style="color:var(--txt)">low-correlation</b> return sources so that when one is quiet, another carries — keeping the equity curve calmer through bull, bear, and chop.</p>
-  <div class="grid g3">
-    <div class="card"><div class="ic">⚖️</div><h3>Market-neutral core</h3><p>A dollar-neutral long/short book: long quality assets, short structurally weak, high-inflation tokens. Low directional exposure to the overall market.</p></div>
-    <div class="card"><div class="ic">🧭</div><h3>Uncorrelated overlays</h3><p>A trend-following sleeve and a gold (PAXG) sleeve add return streams that move independently of the core — true diversification, not duplication.</p></div>
-    <div class="card"><div class="ic">🛡️</div><h3>Risk first</h3><p>Volatility targeting, regime-aware de-risking, position limits, and conservative leverage. The goal is a shallow drawdown profile, not a lottery ticket.</p></div>
-  </div>
-</div></section>
-
-<section id="engines" style="background:var(--bg2)"><div class="wrap">
-  <span class="eyebrow">Under the hood</span>
-  <h2>Three independent engines</h2>
-  <div class="grid" style="margin-top:34px">
-    <div class="engine"><div class="num">01</div><div>
-      <h3>Core Long/Short (dollar-neutral)</h3>
-      <p>Permanent conviction longs (BTC, HYPE) plus dynamically-selected layer-1s screened on on-chain TVL growth. Against them, a broad, diversified short book of high-inflation tokens in sustained downtrends. Balanced long vs short to neutralise market beta.</p>
-      <span class="tag">Primary engine · auto-rebalanced</span>
-    </div></div>
-    <div class="engine"><div class="num">02</div><div>
-      <h3>Trend Following</h3>
-      <p>A small directional sleeve that rides only the strongest, confirmed trends (momentum + trend-strength filtered), sized in tiers. Near-zero correlation to the core — it captures the breakouts the neutral book cannot.</p>
-      <span class="tag">Diversifier · reviewed every 2h</span>
-    </div></div>
-    <div class="engine"><div class="num">03</div><div>
-      <h3>Gold (PAXG) Sleeve</h3>
-      <p>Holds tokenized gold only while gold is in a confirmed uptrend, otherwise flat. An asset essentially uncorrelated with crypto — a calm, low-volatility ballast for the portfolio.</p>
-      <span class="tag">Ballast · trend-gated</span>
-    </div></div>
-  </div>
-</div></section>
-
-<section id="risk"><div class="wrap">
-  <span class="eyebrow">Risk management</span>
-  <h2>Drawdown discipline, by design</h2>
-  <p class="lead">Returns are a by-product of surviving. The system continuously dials risk up and down rather than chasing every move.</p>
-  <div class="grid g2">
-    <div class="card"><h3>Volatility targeting</h3><p>Exposure scales down automatically when markets get turbulent, and back up when they calm — keeping realized risk roughly constant.</p></div>
-    <div class="card"><h3>Regime de-risking</h3><p>When altcoins broadly outperform (the classic short-squeeze regime), the short book is automatically reduced to avoid being caught offside.</p></div>
-    <div class="card"><h3>Broad diversification</h3><p>Dozens of small short positions instead of a few large ones — single-name shocks barely move the portfolio.</p></div>
-    <div class="card"><h3>No liquidation by design</h3><p>Conservative, dollar-neutral leverage keeps the account far from any liquidation threshold even in violent markets.</p></div>
-  </div>
-</div></section>
-
-<section id="transparency" style="background:var(--bg2)"><div class="wrap">
-  <span class="eyebrow">Transparency &amp; custody</span>
-  <h2>On-chain. Non-custodial. Auditable.</h2>
-  <div class="stats">
-    <div class="stat"><div class="v">On-chain</div><div class="l">Hyperliquid vault</div></div>
-    <div class="stat"><div class="v">24/7</div><div class="l">Rules-based automation</div></div>
-    <div class="stat"><div class="v">Neutral</div><div class="l">Dollar-balanced core</div></div>
-    <div class="stat"><div class="v">No-withdraw</div><div class="l">Trading keys only</div></div>
-  </div>
-  <p class="lead" style="margin-top:30px">Capital stays in the Hyperliquid vault on-chain — deposits and withdrawals are controlled by you, not by us. The trading engine signs orders through an agent wallet that <b style="color:var(--txt)">cannot withdraw funds</b>. Positions and performance are visible on-chain in real time.</p>
-</div></section>
-
-<section id="invest"><div class="wrap">
-  <div class="cta-band">
-    <span class="eyebrow">Allocate</span>
-    <h2>Invest in All-Weather MS</h2>
-    <p>Deposit directly into the on-chain vault on Hyperliquid. You keep custody; the strategy does the rest.</p>
-    <div class="cta" style="justify-content:center">
-      <a class="btn btn-p" href="https://app.hyperliquid.xyz/vaults/0xcc1e051cbb317bbfaa3c025dbd1dbfbddfd608c7" target="_blank" rel="noopener">Open the Hyperliquid Vault →</a>
-      <a class="btn btn-o" href="mailto:ir@allweatherms.com">Contact IR</a>
+  <div class="hdr">
+    <div class="l"><div class="ico">✦</div>
+      <div>
+        <div class="name" id="vname">All-Weather Multi-Strategy</div>
+        <div class="desc" id="vdesc">Vault · Hyperliquid mainnet</div>
+      </div>
     </div>
-    <div style="margin-top:24px"><span class="pill"><span class="g"></span> Strategy live &amp; automated</span></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="pill"><span class="d"></span> <span id="conn">LIVE · ON-CHAIN</span></span>
+      <span class="tag" id="addr">0xcc1e···08c7</span>
+      <span class="tag" id="clock">00:00:00 UTC</span>
+    </div>
   </div>
-</div></section>
 
-<section style="padding-top:0"><div class="wrap">
-  <div class="disc">
-    <b>Risk disclosure — please read.</b> Trading digital assets involves a substantial risk of loss and is not suitable for every investor. You may lose some or all of your capital. All-Weather MS is a quantitative crypto trading strategy; <b>there is no guarantee of profit and no protection against loss.</b>
-    Any descriptions of methodology are for information only. Where strategy characteristics or research are referenced, they may be based on <b>hypothetical or backtested results, which have inherent limitations</b> — they do not reflect actual trading, may not account for all costs (fees, slippage, funding), and are not indicative of future results. <b>Past and simulated performance does not guarantee future returns.</b>
-    Nothing on this page is an offer, solicitation, or recommendation to buy or sell any asset, nor financial, legal, or tax advice. The vault is non-custodial and operated on Hyperliquid; smart-contract, protocol, and counterparty risks apply. Availability may be restricted in certain jurisdictions; it is your responsibility to ensure eligibility. Do your own research and consult a licensed advisor before allocating.
+  <div class="cards">
+    <div class="c"><div class="lbl">AUM / Equity</div><div class="v" id="aum">$—</div><div class="s">account value</div></div>
+    <div class="c"><div class="lbl">Total P&L</div><div class="v" id="tpnl">—</div><div class="s">all-time</div></div>
+    <div class="c"><div class="lbl">ROI</div><div class="v" id="roi">—</div><div class="s">since inception</div></div>
+    <div class="c"><div class="lbl">24h P&L</div><div class="v" id="d24">—</div><div class="s">last 24h</div></div>
+    <div class="c"><div class="lbl">APR</div><div class="v" id="apr">—</div><div class="s">annualized</div></div>
+    <div class="c"><div class="lbl">Depositors</div><div class="v" id="dep">—</div><div class="s">followers</div></div>
+    <div class="c"><div class="lbl">Volume</div><div class="v" id="vol">—</div><div class="s">all-time traded</div></div>
+    <div class="c"><div class="lbl">Positions</div><div class="v" id="npos">—</div><div class="s" id="ls">— L / — S</div></div>
   </div>
-</div></section>
 
-<footer><div class="wrap foot">
-  <div class="logo" style="font-size:15px"><span class="dot" style="width:18px;height:18px"></span> All-Weather MS</div>
-  <div>© 2026 allweatherms.com · <a href="mailto:ir@allweatherms.com" class="acc">ir@allweatherms.com</a></div>
-  <div style="color:var(--line)">Built on Hyperliquid</div>
-</div></footer>
+  <div class="main">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div><span class="lbl" id="chTitle">Cumulative P&L</span> <span id="chVal" style="font-size:14px;font-weight:700;margin-left:8px"></span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="seg" id="metric"><button data-m="pnl" class="on">PnL</button><button data-m="acct">Equity</button></div>
+          <div class="seg" id="win"><button data-w="day">1D</button><button data-w="week">1W</button><button data-w="month">1M</button><button data-w="allTime" class="on">ALL</button></div>
+        </div>
+      </div>
+      <canvas id="chart" height="240"></canvas>
+    </div>
 
+    <div class="panel">
+      <span class="lbl">Exposure &amp; risk</span>
+      <div style="margin-top:6px">
+        <div style="display:flex;justify-content:space-between;font-size:11px"><span class="grn" id="lpct">Long —</span><span class="red" id="spct">Short —</span></div>
+        <div class="bar"><i id="lbar" style="background:var(--grnb)"></i><i id="sbar" style="background:var(--red)"></i></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="kv"><span class="mut">Gross exposure</span><b id="gross">—</b></div>
+        <div class="kv"><span class="mut">Net exposure</span><b id="net">—</b></div>
+        <div class="kv"><span class="mut">Long notional</span><b class="grn" id="lN">—</b></div>
+        <div class="kv"><span class="mut">Short notional</span><b class="red" id="sN">—</b></div>
+        <div class="kv"><span class="mut">Neutrality</span><b class="grn" id="neut">—</b></div>
+        <div class="kv" style="border:none"><span class="mut">Leader fee</span><b id="fee">—</b></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;font-size:10px"><span class="lbl">Margin used</span><b id="mu">—</b></div>
+        <div class="gauge"><i id="mug" style="width:0%"></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:8px"><span class="lbl">Liquidation cushion</span><b class="grn" id="cush">—</b></div>
+        <div class="gauge"><i id="cushg" style="width:0%"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px">
+    <span class="lbl">Allocation by notional · longs (green) / shorts (red)</span>
+    <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:10px">
+      <canvas id="donut" style="width:270px;height:270px;flex:none"></canvas>
+      <div id="dlegend" style="flex:1;min-width:240px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px 16px;max-height:270px;overflow:auto"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span class="lbl">Open positions · live</span>
+      <span class="mut" style="font-size:10px"><span id="npos3">—</span> positions · sorted by notional</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Coin</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th><th>Liq. price</th>
+          <th>Notional</th><th>Unreal. P&L</th><th>ROE</th><th>Lev</th><th>Funding</th>
+        </tr></thead>
+        <tbody id="ptbody"><tr><td colspan="11" class="mut" style="text-align:center;padding:24px">Loading on-chain positions…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <div>Live on-chain data · Hyperliquid · vault <span id="addr2"></span></div>
+    <div>Strategy logic not disclosed · figures may include unrealized P&L · not investment advice</div>
+  </footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const VAULT="0xcc1e051cbb317bbfaa3c025dbd1dbfbddfd608c7";
+const API="https://api.hyperliquid.xyz/info";
+const dpr=Math.max(1,window.devicePixelRatio||1);
+function fit(c){const r=c.getBoundingClientRect();c.width=r.width*dpr;c.height=c.height*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);c.W=r.width;c.H=c.height/dpr;return x;}
+const usd=n=>(n<0?'-':'')+'$'+Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
+const sig=n=>(n>=0?'+':'')+'$'+Math.round(n).toLocaleString();
+const px=n=>n>=1000?n.toLocaleString(undefined,{maximumFractionDigits:1}):n.toLocaleString(undefined,{maximumFractionDigits:5});
+async function post(b){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return r.json();}
+$('#addr').textContent=VAULT.slice(0,6)+'···'+VAULT.slice(-4);$('#addr2').textContent=VAULT;
+setInterval(()=>{$('#clock').textContent=new Date().toUTCString().slice(17,25)+' UTC';},1000);
+
+let pf=null, mids={}, metric='pnl', win='allTime', equity=0, firstEq=0;
+
+async function loadVault(){
+  try{
+    const d=await post({type:"vaultDetails",vaultAddress:VAULT});
+    $('#vname').textContent=d.name||'All-Weather Multi-Strategy';
+    $('#vdesc').textContent=(d.description||'').split('\n')[0].slice(0,140);
+    $('#apr').innerHTML='<span class="'+((d.apr||0)>=0?'grn':'red')+'">'+((d.apr||0)*100).toFixed(1)+'%</span>';
+    $('#dep').textContent=(d.followers||[]).length;
+    $('#fee').textContent=((d.leaderCommission||0)*100).toFixed(0)+'%';
+    pf=d.portfolio; drawChart();
+  }catch(e){}
+}
+async function loadState(){
+  try{
+    const st=await post({type:"clearinghouseState",user:VAULT});
+    equity=parseFloat(st.marginSummary.accountValue);
+    const mu=parseFloat(st.marginSummary.totalMarginUsed), mm=parseFloat(st.crossMaintenanceMarginUsed||0);
+    let up=0,gross=0,net=0,nL=0,nS=0,lN=0,sN=0;
+    const rows=st.assetPositions.map(p=>{
+      const P=p.position,szi=parseFloat(P.szi),pv=parseFloat(P.positionValue),u=parseFloat(P.unrealizedPnl);
+      up+=u;gross+=Math.abs(pv);net+=pv;if(szi>0){nL++;lN+=Math.abs(pv);}else{nS++;sN+=Math.abs(pv);}
+      const mark=mids[P.coin]?parseFloat(mids[P.coin]):pv/Math.abs(szi);
+      return{coin:P.coin,szi,entry:parseFloat(P.entryPx||0),mark,liq:parseFloat(P.liquidationPx||0),nv:Math.abs(pv),
+        u,roe:parseFloat(P.returnOnEquity||0),lev:(P.leverage||{}).value||0,fund:parseFloat((P.cumFunding||{}).sinceOpen||0)};
+    }).sort((a,b)=>b.nv-a.nv);
+    $('#aum').textContent=usd(equity);
+    $('#tpnl').innerHTML='<span class="'+(up>=0?'grn':'red')+'">'+sig(up)+'</span>';
+    $('#npos').textContent=rows.length;$('#npos3').textContent=rows.length;
+    $('#ls').textContent=nL+' L / '+nS+' S';
+    $('#gross').textContent=(gross/equity).toFixed(2)+'x';
+    $('#net').innerHTML='<span class="'+(net>=0?'grn':'red')+'">'+sig(net)+' ('+(net>=0?'+':'')+(net/equity*100).toFixed(0)+'%)</span>';
+    $('#lN').textContent=usd(lN);$('#sN').textContent=usd(sN);
+    $('#neut').textContent=(100-Math.abs(net)/gross*100).toFixed(0)+'%';
+    const lp=lN/(lN+sN)*100; $('#lbar').style.width=lp+'%';$('#sbar').style.width=(100-lp)+'%';
+    $('#lpct').textContent='Long '+lp.toFixed(0)+'%';$('#spct').textContent='Short '+(100-lp).toFixed(0)+'%';
+    $('#mu').textContent=(mu/equity*100).toFixed(0)+'%';$('#mug').style.width=Math.min(100,mu/equity*100)+'%';
+    const cush=(equity-mm)/equity*100;$('#cush').textContent=cush.toFixed(0)+'%';$('#cushg').style.width=cush+'%';
+    $('#ptbody').innerHTML=rows.map(r=>`<tr>
+      <td class="coin">${r.coin}</td>
+      <td><span class="side ${r.szi>0?'sl':'ss'}">${r.szi>0?'LONG':'SHORT'}</span></td>
+      <td>${Math.abs(r.szi).toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+      <td>$${px(r.entry)}</td><td>$${px(r.mark)}</td>
+      <td>${r.liq?'$'+px(r.liq):'—'}</td>
+      <td>${usd(r.nv)}</td>
+      <td class="${r.u>=0?'grn':'red'}">${sig(r.u)}</td>
+      <td class="${r.roe>=0?'grn':'red'}">${(r.roe*100).toFixed(1)}%</td>
+      <td>${r.lev}x</td>
+      <td class="${r.fund<=0?'grn':'red'}">${sig(-r.fund)}</td></tr>`).join('');
+    drawDonut(rows,gross);
+    $('#conn').textContent='LIVE · ON-CHAIN';
+  }catch(e){$('#conn').textContent='RECONNECTING';}
+}
+async function loadMids(){try{mids=await post({type:"allMids"});}catch(e){}}
+
+const dc=$('#donut');let dx=null;
+function fitFixed(c,w,h){c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);c.W=w;c.H=h;return x;}
+function drawDonut(rows,gross){
+  if(!dx)dx=fitFixed(dc,270,270);
+  const W=dc.W,H=dc.H,ccx=W/2,ccy=H/2,R=112,r=64;
+  dx.clearRect(0,0,W,H);if(!gross)return;
+  const longs=rows.filter(p=>p.szi>0).sort((a,b)=>b.nv-a.nv);
+  const shorts=rows.filter(p=>p.szi<0).sort((a,b)=>b.nv-a.nv);
+  const ord=[...longs,...shorts];
+  let ang=-Math.PI/2;
+  ord.forEach(p=>{
+    const isL=p.szi>0;const frac=p.nv/gross;const a2=ang+frac*Math.PI*2;
+    const grp=isL?longs:shorts;const idx=grp.indexOf(p),cnt=grp.length;
+    const L=isL?(30+idx/Math.max(1,cnt-1)*30):(38+idx/Math.max(1,cnt-1)*28);
+    dx.beginPath();dx.moveTo(ccx,ccy);dx.arc(ccx,ccy,R,ang,a2);dx.closePath();
+    dx.fillStyle=isL?`hsl(150,42%,${L}%)`:`hsl(7,58%,${L}%)`;dx.fill();
+    dx.strokeStyle='#faf8f3';dx.lineWidth=1;dx.stroke();
+    if(frac>0.045){const mid=(ang+a2)/2;const lx=ccx+Math.cos(mid)*(R+9),ly=ccy+Math.sin(mid)*(R+9);
+      dx.fillStyle='#1b1c19';dx.font='8px Space Mono';dx.textAlign=Math.cos(mid)<0?'right':'left';dx.textBaseline='middle';dx.fillText(p.coin,lx,ly);}
+    ang=a2;
+  });
+  dx.beginPath();dx.arc(ccx,ccy,r,0,7);dx.fillStyle='#faf8f3';dx.fill();
+  const lp=longs.reduce((s,p)=>s+p.nv,0)/gross*100;
+  dx.textAlign='center';dx.fillStyle='#8b8a80';dx.font='8px Space Mono';dx.fillText('GROSS',ccx,ccy-18);
+  dx.fillStyle='#1b1c19';dx.font='bold 14px Space Mono';dx.fillText('$'+Math.round(gross/1000)+'K',ccx,ccy-1);
+  dx.font='9px Space Mono';dx.fillStyle='#2f7d4f';dx.fillText('L '+lp.toFixed(0)+'%',ccx-18,ccy+16);
+  dx.fillStyle='#c0473f';dx.fillText('S '+(100-lp).toFixed(0)+'%',ccx+18,ccy+16);
+  $('#dlegend').innerHTML=ord.map(p=>{const isL=p.szi>0;const col=isL?'#3a9d6e':'#c0473f';
+    return `<div style="display:flex;align-items:center;gap:7px;font-size:10.5px"><span style="width:9px;height:9px;border-radius:2px;background:${col};flex:none"></span><b style="color:${isL?'var(--grn)':'var(--red)'}">${p.coin}</b><span class="mut" style="margin-left:auto">${(p.nv/gross*100).toFixed(1)}%</span></div>`;
+  }).join('');
+}
+
+// chart
+const ch=$('#chart'),cx=fit(ch);
+function drawChart(){
+  cx.clearRect(0,0,ch.W,ch.H);if(!pf)return;
+  const blk=(pf.find(x=>x[0]===win)||[])[1];if(!blk)return;
+  const hist=(metric==='pnl'?blk.pnlHistory:blk.accountValueHistory)||[];
+  const vals=hist.map(h=>parseFloat(h[1]));if(vals.length<2)return;
+  const m=Math.min(...vals,0),M=Math.max(...vals,0);const Y=v=>ch.H-10-((v-m)/(M-m||1))*(ch.H-24);
+  // zero line
+  cx.strokeStyle='rgba(140,138,128,.4)';cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(0,Y(0));cx.lineTo(ch.W,Y(0));cx.stroke();cx.setLineDash([]);
+  const last=vals[vals.length-1],pos=last>=0;
+  cx.beginPath();vals.forEach((v,i)=>{const x=i/(vals.length-1)*ch.W;i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});
+  cx.lineTo(ch.W,Y(0));cx.lineTo(0,Y(0));cx.closePath();
+  const g=cx.createLinearGradient(0,0,0,ch.H);g.addColorStop(0,pos?'rgba(58,157,110,.26)':'rgba(192,71,63,.22)');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fill();
+  cx.beginPath();vals.forEach((v,i)=>{const x=i/(vals.length-1)*ch.W;i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});
+  cx.strokeStyle=pos?'#2f7d4f':'#c0473f';cx.lineWidth=1.7;cx.stroke();
+  $('#chVal').innerHTML='<span class="'+(pos?'grn':'red')+'">'+sig(last)+'</span>';
+  $('#chTitle').textContent=(metric==='pnl'?'P&L · ':'Account value · ')+({day:'24h',week:'7d',month:'30d',allTime:'all-time'}[win]);
+  // roi + 24h from allTime/day
+  const at=(pf.find(x=>x[0]==='allTime')||[])[1];
+  if(at){const av=at.accountValueHistory.map(h=>parseFloat(h[1])).filter(v=>v>0);firstEq=av[0]||equity;
+    const pn=at.pnlHistory;const tp=parseFloat(pn[pn.length-1][1]);
+    $('#roi').innerHTML='<span class="'+(tp>=0?'grn':'red')+'">'+(tp/(firstEq||1)*100).toFixed(1)+'%</span>';
+    const vlm=parseFloat(at.vlm||0);$('#vol').textContent=vlm>1e6?'$'+(vlm/1e6).toFixed(1)+'M':usd(vlm);}
+  const day=(pf.find(x=>x[0]==='day')||[])[1];
+  if(day){const h=day.pnlHistory;const c=parseFloat(h[h.length-1][1])-parseFloat(h[0][1]);$('#d24').innerHTML='<span class="'+(c>=0?'grn':'red')+'">'+sig(c)+'</span>';}
+}
+document.querySelectorAll('#metric button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#metric button').forEach(x=>x.classList.remove('on'));b.classList.add('on');metric=b.dataset.m;drawChart();});
+document.querySelectorAll('#win button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#win button').forEach(x=>x.classList.remove('on'));b.classList.add('on');win=b.dataset.w;drawChart();});
+
+(async()=>{await loadMids();await loadVault();await loadState();})();
+setInterval(loadState,7000);setInterval(loadMids,4000);setInterval(loadVault,30000);
+window.addEventListener('resize',()=>{fit(ch);drawChart();});
+</script>
 </body>
 </html>
