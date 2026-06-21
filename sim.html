@@ -55,6 +55,20 @@
   footer{margin-top:14px;font-size:10px;color:var(--mut);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
   #chart,#donut{cursor:crosshair}
   #tip{position:fixed;pointer-events:none;background:#1b1c19;color:#faf8f3;font-size:11px;line-height:1.5;padding:6px 9px;border-radius:7px;opacity:0;transition:opacity .08s;z-index:99;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  @media(max-width:640px){
+    body{padding:10px}
+    .panel{padding:12px}
+    .hdr{margin-bottom:12px}
+    .name{font-size:16px}
+    .desc{font-size:9.5px}
+    .c{padding:11px}
+    .c .v{font-size:16px}
+    th,td{padding:6px 7px;font-size:10.5px}
+    .dwrap{justify-content:center}
+    #donut{width:240px!important;height:240px!important}
+    #tip{font-size:10.5px;max-width:60vw;white-space:normal}
+    .seg button{padding:6px 10px}
+  }
 </style>
 </head>
 <body>
@@ -87,7 +101,7 @@
 
   <div class="main">
     <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px">
         <div><span class="lbl" id="chTitle">Cumulative P&L</span> <span id="chVal" style="font-size:14px;font-weight:700;margin-left:8px"></span></div>
         <div style="display:flex;gap:8px;align-items:center">
           <div class="seg" id="metric"><button data-m="pnl" class="on">PnL</button><button data-m="acct">Equity</button></div>
@@ -122,7 +136,7 @@
 
   <div class="panel" style="margin-bottom:14px">
     <span class="lbl">Allocation by notional · longs (green) / shorts (red)</span>
-    <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:10px">
+    <div class="dwrap" style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:10px">
       <canvas id="donut" style="width:270px;height:270px;flex:none"></canvas>
       <div id="dlegend" style="flex:1;min-width:240px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px 16px;max-height:270px;overflow:auto"></div>
     </div>
@@ -316,6 +330,11 @@ dc.addEventListener('mousemove',e=>{
   showTip(`<b style="color:${s.side>0?'#8fe0b8':'#f0a39d'}">${s.coin}</b> ${s.side>0?'LONG':'SHORT'}<br>${usd(s.nv)} · ${s.pct.toFixed(1)}%`,e.clientX,e.clientY);
 });
 dc.addEventListener('mouseleave',hideTip);
+// touch (mobile): map to the same handlers
+[ch,dc].forEach(cv=>{
+  cv.addEventListener('touchmove',ev=>{const t=ev.touches[0];if(!t)return;ev.preventDefault();cv.dispatchEvent(new MouseEvent('mousemove',{clientX:t.clientX,clientY:t.clientY}));},{passive:false});
+  cv.addEventListener('touchend',()=>{hideTip();if(cv===ch)drawChart();});
+});
 
 (async()=>{await loadMids();await loadVault();await loadState();})();
 setInterval(loadState,7000);setInterval(loadMids,4000);setInterval(loadVault,30000);
