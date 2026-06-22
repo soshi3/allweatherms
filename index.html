@@ -142,6 +142,21 @@
     </div>
   </div>
 
+  <div class="panel" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span class="lbl">Asset composition · treemap</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="mut" style="font-size:11px">Assets: <b id="tmN">—</b> total</span>
+        <select id="tmFilter" style="background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:11px;padding:5px 9px;cursor:pointer">
+          <option value="all">All positions</option>
+          <option value="long">Long only</option>
+          <option value="short">Short only</option>
+        </select>
+      </div>
+    </div>
+    <div id="treemap" style="position:relative;width:100%;height:340px;margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#10160f"></div>
+  </div>
+
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <span class="lbl">Open positions · live</span>
@@ -232,6 +247,7 @@ async function loadState(){
       <td>${r.lev}x</td>
       <td class="${r.fund<=0?'grn':'red'}">${sig(-r.fund)}</td></tr>`).join('');
     drawDonut(rows,gross);
+    lastRows=rows;renderTreemap(rows);
     $('#conn').textContent='LIVE · ON-CHAIN';
   }catch(e){$('#conn').textContent='RECONNECTING';}
 }
@@ -270,6 +286,42 @@ function drawDonut(rows,gross){
   }).join('');
   DS={ccx,ccy,R,r,seg:dseg,gross};
 }
+
+// ===== treemap (asset composition) =====
+let lastRows=[];
+function squarify(items,x,y,w,h){
+  const total=items.reduce((s,d)=>s+d.value,0)||1;
+  const ns=items.map(d=>({...d,area:d.value/total*(w*h)}));const out=[];
+  const worst=(row,side)=>{const sum=row.reduce((s,r)=>s+r.area,0),s2=side*side,sq=sum*sum;
+    const mx=Math.max(...row.map(r=>r.area)),mn=Math.min(...row.map(r=>r.area));return Math.max(s2*mx/sq,sq/(s2*mn));};
+  (function lay(nodes,x,y,w,h){
+    if(!nodes.length)return;
+    if(nodes.length===1){out.push({...nodes[0],x,y,w,h});return;}
+    const side=Math.min(w,h);let row=[],rest=nodes.slice();row.push(rest.shift());
+    while(rest.length){if(worst([...row,rest[0]],side)<=worst(row,side))row.push(rest.shift());else break;}
+    const ra=row.reduce((s,r)=>s+r.area,0);
+    if(w>=h){const rw=ra/h;let yy=y;for(const r of row){const rh=r.area/rw;out.push({...r,x,y:yy,w:rw,h:rh});yy+=rh;}lay(rest,x+rw,y,w-rw,h);}
+    else{const rh=ra/w;let xx=x;for(const r of row){const rw=r.area/rh;out.push({...r,x:xx,y,w:rw,h:rh});xx+=rw;}lay(rest,x,y+rh,w,h-rh);}
+  })(ns,x,y,w,h);return out;
+}
+function renderTreemap(rows){
+  const el=document.getElementById('treemap');if(!el)return;
+  const fs0=document.getElementById('tmFilter');const f=fs0?fs0.value:'all';
+  let items=rows.map(r=>({coin:r.coin,value:r.nv,side:r.szi>0?1:-1})).filter(i=>i.value>0);
+  if(f==='long')items=items.filter(i=>i.side>0);if(f==='short')items=items.filter(i=>i.side<0);
+  items.sort((a,b)=>b.value-a.value);
+  const tn=document.getElementById('tmN');if(tn)tn.textContent=items.length;
+  const W=el.clientWidth,H=el.clientHeight;if(!items.length||W<10){el.innerHTML='';return;}
+  const mx=items[0].value,tot=items.reduce((s,i)=>s+i.value,0);
+  el.innerHTML=squarify(items,0,0,W,H).map(r=>{
+    const isL=r.side>0,b=isL?'47,125,79':'192,71,63',a=Math.min(.92,.4+Math.sqrt(r.value/mx)*.5);
+    const big=r.w>26&&r.h>13,vert=r.h>r.w*1.5&&r.h>40,fz=Math.max(8,Math.min(13,Math.min(r.w,r.h)/3.2));
+    const lab=big?`<span style="${vert?'writing-mode:vertical-rl;transform:rotate(180deg);':''}font-size:${fz}px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)">${r.coin}</span>`:'';
+    return `<div title="${r.coin} · ${isL?'LONG':'SHORT'} · $${Math.round(r.value).toLocaleString()} · ${(r.value/tot*100).toFixed(1)}%" style="position:absolute;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:rgba(${b},${a});border:1px solid rgba(255,255,255,.1);box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden">${lab}</div>`;
+  }).join('');
+}
+if(document.getElementById('tmFilter'))document.getElementById('tmFilter').addEventListener('change',()=>renderTreemap(lastRows));
+window.addEventListener('resize',()=>renderTreemap(lastRows));
 
 // chart
 const ch=$('#chart'),cx=fit(ch);
