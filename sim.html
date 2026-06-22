@@ -307,7 +307,7 @@ function squarify(items,x,y,w,h){
 function renderTreemap(rows){
   const el=document.getElementById('treemap');if(!el)return;
   const fs0=document.getElementById('tmFilter');const f=fs0?fs0.value:'all';
-  let items=rows.map(r=>({coin:r.coin,value:r.nv,side:r.szi>0?1:-1})).filter(i=>i.value>0);
+  let items=rows.map(r=>({coin:r.coin,value:r.nv,side:r.szi>0?1:-1,u:r.u,roe:r.roe})).filter(i=>i.value>0);
   if(f==='long')items=items.filter(i=>i.side>0);if(f==='short')items=items.filter(i=>i.side<0);
   items.sort((a,b)=>b.value-a.value);
   const tn=document.getElementById('tmN');if(tn)tn.textContent=items.length;
@@ -317,7 +317,7 @@ function renderTreemap(rows){
     const isL=r.side>0,b=isL?'47,125,79':'192,71,63',a=Math.min(.92,.4+Math.sqrt(r.value/mx)*.5);
     const big=r.w>26&&r.h>13,vert=r.h>r.w*1.5&&r.h>40,fz=Math.max(8,Math.min(13,Math.min(r.w,r.h)/3.2));
     const lab=big?`<span style="${vert?'writing-mode:vertical-rl;transform:rotate(180deg);':''}font-size:${fz}px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)">${r.coin}</span>`:'';
-    return `<div data-coin="${r.coin}" data-l="${isL?1:0}" data-v="${Math.round(r.value)}" data-p="${(r.value/tot*100).toFixed(1)}" style="position:absolute;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:rgba(${b},${a});border:1px solid rgba(255,255,255,.1);box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:crosshair">${lab}</div>`;
+    return `<div data-coin="${r.coin}" data-l="${isL?1:0}" data-v="${Math.round(r.value)}" data-p="${(r.value/tot*100).toFixed(1)}" data-u="${Math.round(r.u||0)}" data-roe="${((r.roe||0)*100).toFixed(1)}" style="position:absolute;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:rgba(${b},${a});border:1px solid rgba(255,255,255,.1);box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:crosshair">${lab}</div>`;
   }).join('');
 }
 if(document.getElementById('tmFilter'))document.getElementById('tmFilter').addEventListener('change',()=>renderTreemap(lastRows));
@@ -384,7 +384,7 @@ dc.addEventListener('mousemove',e=>{
 dc.addEventListener('mouseleave',hideTip);
 // treemap hover tooltip
 const tmEl=document.getElementById('treemap');
-function tmTip(cell,x,y){const isL=cell.dataset.l==='1';showTip(`<b style="color:${isL?'#8fe0b8':'#f0a39d'}">${cell.dataset.coin}</b> ${isL?'LONG':'SHORT'}<br>$${(+cell.dataset.v).toLocaleString()} · ${cell.dataset.p}%`,x,y);}
+function tmTip(cell,x,y){const isL=cell.dataset.l==='1';const u=+cell.dataset.u,roe=+cell.dataset.roe;const pc=u>=0?'#8fe0b8':'#f0a39d';showTip(`<b style="color:${isL?'#8fe0b8':'#f0a39d'}">${cell.dataset.coin}</b> ${isL?'LONG':'SHORT'}<br>$${(+cell.dataset.v).toLocaleString()} · ${cell.dataset.p}% of book<br><span style="color:${pc}">P&L ${u>=0?'+':'-'}$${Math.abs(u).toLocaleString()} (${roe>=0?'+':''}${roe}%)</span>`,x,y);}
 if(tmEl){
   tmEl.addEventListener('mousemove',e=>{const c=e.target.closest('[data-coin]');if(!c){hideTip();return;}tmTip(c,e.clientX,e.clientY);});
   tmEl.addEventListener('mouseleave',hideTip);
