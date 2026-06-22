@@ -317,7 +317,7 @@ function renderTreemap(rows){
     const isL=r.side>0,b=isL?'47,125,79':'192,71,63',a=Math.min(.92,.4+Math.sqrt(r.value/mx)*.5);
     const big=r.w>26&&r.h>13,vert=r.h>r.w*1.5&&r.h>40,fz=Math.max(8,Math.min(13,Math.min(r.w,r.h)/3.2));
     const lab=big?`<span style="${vert?'writing-mode:vertical-rl;transform:rotate(180deg);':''}font-size:${fz}px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)">${r.coin}</span>`:'';
-    return `<div title="${r.coin} · ${isL?'LONG':'SHORT'} · $${Math.round(r.value).toLocaleString()} · ${(r.value/tot*100).toFixed(1)}%" style="position:absolute;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:rgba(${b},${a});border:1px solid rgba(255,255,255,.1);box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden">${lab}</div>`;
+    return `<div data-coin="${r.coin}" data-l="${isL?1:0}" data-v="${Math.round(r.value)}" data-p="${(r.value/tot*100).toFixed(1)}" style="position:absolute;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:rgba(${b},${a});border:1px solid rgba(255,255,255,.1);box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:crosshair">${lab}</div>`;
   }).join('');
 }
 if(document.getElementById('tmFilter'))document.getElementById('tmFilter').addEventListener('change',()=>renderTreemap(lastRows));
@@ -382,6 +382,15 @@ dc.addEventListener('mousemove',e=>{
   showTip(`<b style="color:${s.side>0?'#8fe0b8':'#f0a39d'}">${s.coin}</b> ${s.side>0?'LONG':'SHORT'}<br>${usd(s.nv)} · ${s.pct.toFixed(1)}%`,e.clientX,e.clientY);
 });
 dc.addEventListener('mouseleave',hideTip);
+// treemap hover tooltip
+const tmEl=document.getElementById('treemap');
+function tmTip(cell,x,y){const isL=cell.dataset.l==='1';showTip(`<b style="color:${isL?'#8fe0b8':'#f0a39d'}">${cell.dataset.coin}</b> ${isL?'LONG':'SHORT'}<br>$${(+cell.dataset.v).toLocaleString()} · ${cell.dataset.p}%`,x,y);}
+if(tmEl){
+  tmEl.addEventListener('mousemove',e=>{const c=e.target.closest('[data-coin]');if(!c){hideTip();return;}tmTip(c,e.clientX,e.clientY);});
+  tmEl.addEventListener('mouseleave',hideTip);
+  tmEl.addEventListener('touchmove',ev=>{const t=ev.touches[0];if(!t)return;const el2=document.elementFromPoint(t.clientX,t.clientY);const c=el2&&el2.closest&&el2.closest('[data-coin]');if(!c){hideTip();return;}ev.preventDefault();tmTip(c,t.clientX,t.clientY);},{passive:false});
+  tmEl.addEventListener('touchend',hideTip);
+}
 // touch (mobile): map to the same handlers
 [ch,dc].forEach(cv=>{
   cv.addEventListener('touchmove',ev=>{const t=ev.touches[0];if(!t)return;ev.preventDefault();cv.dispatchEvent(new MouseEvent('mousemove',{clientX:t.clientX,clientY:t.clientY}));},{passive:false});
