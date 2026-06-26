@@ -224,7 +224,6 @@ async function loadState(){
         u,roe:parseFloat(P.returnOnEquity||0),lev:(P.leverage||{}).value||0,fund:parseFloat((P.cumFunding||{}).sinceOpen||0)};
     }).sort((a,b)=>b.nv-a.nv);
     $('#aum').textContent=usd(equity);
-    $('#tpnl').innerHTML='<span class="'+(up>=0?'grn':'red')+'">'+sig(up)+'</span>';
     $('#npos').textContent=rows.length;$('#npos3').textContent=rows.length;
     $('#ls').textContent=nL+' L / '+nS+' S';
     $('#gross').textContent=(gross/equity).toFixed(2)+'x';
@@ -349,6 +348,7 @@ function drawChart(){
   const at=(pf.find(x=>x[0]==='allTime')||[])[1];
   if(at){const av=at.accountValueHistory.map(h=>parseFloat(h[1])).filter(v=>v>0);firstEq=av[0]||equity;
     const pn=at.pnlHistory;const tp=parseFloat(pn[pn.length-1][1]);
+    $('#tpnl').innerHTML='<span class="'+(tp>=0?'grn':'red')+'">'+sig(tp)+'</span>';
     $('#roi').innerHTML='<span class="'+(tp>=0?'grn':'red')+'">'+(tp/(firstEq||1)*100).toFixed(1)+'%</span>';
     const vlm=parseFloat(at.vlm||0);$('#vol').textContent=vlm>1e6?'$'+(vlm/1e6).toFixed(1)+'M':usd(vlm);}
   const day=(pf.find(x=>x[0]==='day')||[])[1];
