@@ -353,9 +353,12 @@ function drawChart(){
     const vlm=parseFloat(at.vlm||0);$('#vol').textContent=vlm>1e6?'$'+(vlm/1e6).toFixed(1)+'M':usd(vlm);}
   const day=(pf.find(x=>x[0]==='day')||[])[1];
   if(day){const h=day.pnlHistory;const c=parseFloat(h[h.length-1][1])-parseFloat(h[0][1]);$('#d24').innerHTML='<span class="'+(c>=0?'grn':'red')+'">'+sig(c)+'</span>';}
-  // max drawdown — peak-to-trough on account value for the current window, overlaid top-left
-  const eq=(blk.accountValueHistory||[]).map(h=>parseFloat(h[1])).filter(v=>v>0);
-  let mdd=0,pk=0;eq.forEach(v=>{if(v>pk)pk=v;const dd=pk>0?(pk-v)/pk:0;if(dd>mdd)mdd=dd;});
+  // max drawdown — flow-neutral: high-water-mark of cumulative PnL, normalised by the
+  // account value at that peak (so deposits/withdrawals don't count as drawdown). Matches HL stat.
+  const pnl=(blk.pnlHistory||[]).map(h=>parseFloat(h[1]));
+  const acv=(blk.accountValueHistory||[]).map(h=>parseFloat(h[1]));
+  let mdd=0,pkP=-Infinity,pkAV=0;
+  for(let i=0;i<pnl.length;i++){if(pnl[i]>pkP){pkP=pnl[i];pkAV=acv[i];}if(pkAV>0){const dd=(pkP-pnl[i])/pkAV;if(dd>mdd)mdd=dd;}}
   cx.save();cx.textBaseline='top';
   cx.fillStyle='rgba(250,248,243,.8)';cx.fillRect(4,4,70,30);
   cx.font='9.5px "Space Mono",ui-monospace,monospace';cx.fillStyle='#8b8a80';cx.fillText('MAX DD',8,7);
