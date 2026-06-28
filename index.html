@@ -353,6 +353,14 @@ function drawChart(){
     const vlm=parseFloat(at.vlm||0);$('#vol').textContent=vlm>1e6?'$'+(vlm/1e6).toFixed(1)+'M':usd(vlm);}
   const day=(pf.find(x=>x[0]==='day')||[])[1];
   if(day){const h=day.pnlHistory;const c=parseFloat(h[h.length-1][1])-parseFloat(h[0][1]);$('#d24').innerHTML='<span class="'+(c>=0?'grn':'red')+'">'+sig(c)+'</span>';}
+  // max drawdown — peak-to-trough on account value for the current window, overlaid top-left
+  const eq=(blk.accountValueHistory||[]).map(h=>parseFloat(h[1])).filter(v=>v>0);
+  let mdd=0,pk=0;eq.forEach(v=>{if(v>pk)pk=v;const dd=pk>0?(pk-v)/pk:0;if(dd>mdd)mdd=dd;});
+  cx.save();cx.textBaseline='top';
+  cx.fillStyle='rgba(250,248,243,.8)';cx.fillRect(4,4,70,30);
+  cx.font='9.5px "Space Mono",ui-monospace,monospace';cx.fillStyle='#8b8a80';cx.fillText('MAX DD',8,7);
+  cx.font='700 13px "Space Mono",ui-monospace,monospace';cx.fillStyle='#c0473f';cx.fillText('−'+(mdd*100).toFixed(1)+'%',8,18);
+  cx.restore();
 }
 document.querySelectorAll('#metric button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#metric button').forEach(x=>x.classList.remove('on'));b.classList.add('on');metric=b.dataset.m;drawChart();});
 document.querySelectorAll('#win button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#win button').forEach(x=>x.classList.remove('on'));b.classList.add('on');win=b.dataset.w;drawChart();});
